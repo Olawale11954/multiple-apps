@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Chatbot App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,400;0900;1,300;1,500;1,600&family=Roboto+Slab:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+       <script src="https://kit.fontawesome.com/3a1a6056f3.js" crossorigin="anonymous"></script>
+       <link rel="stylesheet" href="style.css">
+     </head>
+    
+
+<body>
+    <section class="header">
+        <nav>
+           <a href="index.html"><img src="images/school logo.png"></a>
+           <div class="nav-links" id="navLinks">
+              <i class="fa fa-times" onclick="hideMenu()"></i>
+              <ul>
+                 <li><a href="index.html">HOME</a></li>
+                 <li><a href="chatbot.html">CHATME</a></li>
+                 <li><a href="quiz.html">QUIZ</a></li>
+                 <li><a href="search engine.html">SEARCH IMAGE</a></li>
+                 <li><a href="weather.html">CHECK WEATHER</a></li>
+                 <li><a href="contact.html">CONTACTS</a></li>
+              </ul>
+           </div>
+           <ul>
+           </ul>
+           <i class="fa fa-bars" onclick="showMenu()"></i>
+        </nav>
+<button class="chatbot-toggler">
+
+
+<span class="material-symbols-outlined">mode_comment</span>
+<span class="material-symbols-outlined">close</span>
+
+
+</button>
+
+
+    <div class="chatbot">
+
+        <header>
+
+            <h2>ChatMe</h2>
+
+            <span class="close-btn material-symbols-outlined">close</span>
+
+        </header>
+
+        <ul class="chatbox">
+
+            <li class="chat incoming">
+
+
+  <p>Hi there 👋👋👋👋 <br>How can i help you today?</p>
+
+            </li>
+
+            </ul>
+
+        <div class="chat-input">
+
+            <textarea placeholder="Enter message here..." required></textarea>
+            
+
+            <span id="send-btn" class="material-symbols-outlined">send</span>
+
+        </div>
+
+    </div>
+    <script defer>
+
+var navLinks = document.getElementById("navLinks");
+      function showMenu(){
+         navLinks.style.right = "0";
+      }
+      function hideMenu(){
+         navLinks.style.right = "-200px";
+      }
+
+const chatInput = document.querySelector(".chat-input textarea");
+
+const sendChatBtn = document.querySelector(".chat-input span");
+
+const chatbox = document.querySelector(".chatbox");
+
+const chatbotToggler = document.querySelector(".chatbot-toggler");
+
+const chatbotCloseBtn = document.querySelector(".close-btn");
+
+
+
+let userMessage;
+const API_KEY = "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";
+
+const inputInitHeight = chatInput.scrollHeight;
+
+
+
+const createChatLi = (message, className) =>{
+
+    // Cteate a chat <li> element with passed message and className
+
+    const chatLi = document.createElement("li");
+
+    chatLi.classList.add("chat", className);
+
+    let chatContent = className === "outgoing" ? `<p></p>`: `<p></p>`;
+
+    chatLi.innerHTML = chatContent;
+    
+    chatLi.querySelector("p").textContent = message; 
+
+    return chatLi;
+
+}
+const generateResponse = (incomingChatLi) =>{
+
+    const API_URL = "https://api.openai.com/v1/chat/completions";
+    const messageElement = incomingChatLi.querySelector("p");
+
+const requestOptions = {
+
+        method: "POST",
+
+        headers: {
+
+            "Content-Type": "application/json",
+
+           "Authorization": `Bearer ${API_KEY}`
+
+        },
+
+        body: JSON.stringify({
+
+            model: "gpt-3.5-turbo",
+
+            messages: [{role: "user", content: userMessage}]
+
+        })
+
+    } 
+    fetch(API_URL, requestOptions).then(res => res.json()).then(data =>{
+
+        messageElement.textContent = data.choices[0].message.content;
+
+    }).catch((error) =>{
+     messageElement.classList.add("error");
+
+        messageElement.textContent = "Oops! Something went wrong. Please try again.";
+
+    }).finally(() => chatbox.scrollTo(0, chatBox.scrollHeight));
+}
+
+
+
+
+
+
+const handleChat = () =>{
+
+     userMessage = chatInput.value.trim();
+
+     if(!userMessage) return;
+     chatInput.value = "";
+     chatInput.style.height = `${inputInitHeight}px`;
+     
+     
+
+     
+
+     // Append the user's message to the chatbox
+
+     chatbox.appendChild(createChatLi(userMessage, "outgoing"));
+     chatbox.scrollTo(0, chatbox.scrollHeight);
+
+    setTimeout(() =>{
+        
+       // Display "Loading...." message while waiting for the respoinse 
+       
+const incomingChatLi = createChatLi("Loading...", "incoming")
+ chatbox.appendChild(incomingChatLi);
+ chatbox.scrollTo(0, chatbox.scrollHeight);
+ generateResponse(incomingChatLi);
+    }, 600)
+
+}
+// Adjust the height of the textarea
+chatInput.addEventListener("input", () => {
+    chatInput.style.height = `${inputInitHeight}px`;
+    chatInput.style.height = `${chatInput.scrollHeight}px`;
+});
+
+// If Enter key is press without shift key and window 
+// width is above 800px, handle the chat
+chatInput.addEventListener("keydown", (e) => {
+   if(e.key === "Enter" && !e.shiftKey  && window.innerWidth > 800){
+    e.preventDefault();
+    handleChat();
+   }
+});
+
+
+sendChatBtn.addEventListener("click", handleChat);
+
+
+chatbotCloseBtn.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
+
+chatbotToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
+    
+    </script>
+</body>
+
+</html>
